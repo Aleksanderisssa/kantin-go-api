@@ -1,31 +1,48 @@
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────────────────
-# Railway startup script untuk Laravel 10
-# Dijalankan setiap kali container dimulai.
+# Railway startup script — KantinGO API (Laravel 10)
 # ──────────────────────────────────────────────────────────────────────────────
-set -e
 
-echo "╔══════════════════════════════════════╗"
-echo "║       KantinGO API — Starting        ║"
-echo "╚══════════════════════════════════════╝"
+echo "╔══════════════════════════════════════════╗"
+echo "║     KantinGO API — Railway Start         ║"
+echo "╚══════════════════════════════════════════╝"
+echo "PORT  = ${PORT:-8000}"
+echo "PHP   = $(php -r 'echo PHP_VERSION;')"
 
-# 1. Jalankan migrasi (--force agar tidak ditanya di environment production)
-echo "📦 Running database migrations..."
-php artisan migrate --force
+# ── 1. Clear old caches (wajib sebelum cache ulang) ──────────────────────────
+echo ""
+echo "🧹 Clearing old caches..."
+php artisan config:clear  2>&1 || true
+php artisan route:clear   2>&1 || true
+php artisan view:clear    2>&1 || true
+php artisan cache:clear   2>&1 || true
 
-# 2. Storage symlink (untuk file uploads)
+# ── 2. Cache ulang dengan env vars yang sudah tersedia ───────────────────────
+echo ""
+echo "⚡ Caching config, routes & views..."
+php artisan config:cache  2>&1 || echo "⚠️  config:cache failed (check APP_KEY)"
+php artisan route:cache   2>&1 || echo "⚠️  route:cache failed"
+php artisan view:cache    2>&1 || echo "⚠️  view:cache failed"
+
+# ── 3. Database migration ─────────────────────────────────────────────────────
+echo ""
+echo "🗄️ Running database migrations..."
+if php artisan migrate --force 2>&1; then
+    echo "✅ Migration successful"
+else
+    echo "❌ Migration failed — check DB_HOST / DB_PASSWORD in Railway Variables"
+    echo "   App will still start, but may not function correctly."
+fi
+
+# ── 4. Storage symlink ────────────────────────────────────────────────────────
+echo ""
 echo "🔗 Creating storage link..."
 php artisan storage:link 2>/dev/null || true
 
-# 3. Cache config, route, dan view menggunakan env vars yang sudah tersedia
-echo "⚡ Caching config, routes & views..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# ── 5. Start server ───────────────────────────────────────────────────────────
+echo ""
+echo "🚀 Starting PHP server on 0.0.0.0:${PORT:-8000} ..."
+echo "   Public URL: ${APP_URL:-'(APP_URL not set)'}"
+echo ""
 
-echo "✅ Ready! Starting server on 0.0.0.0:${PORT:-8000}..."
-
-# 4. Jalankan server
-# php artisan serve cukup untuk student project.
-# Untuk production serius → pertimbangkan nginx + php-fpm.
-php artisan serve --host=0.0.0.0 --port="${PORT:-8000}"
+exec php artisan serve --host=0.0.0.0 --port="${PORT:-8000}"
