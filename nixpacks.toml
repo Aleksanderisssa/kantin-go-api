@@ -21,6 +21,3 @@ nixPkgs = [
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader"]
-
-[start]
-cmd = "php artisan migrate --force; php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
