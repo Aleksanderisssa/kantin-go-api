@@ -23,4 +23,4 @@ nixPkgs = [
 cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [start]
-cmd = "bash start.sh"
+cmd = "bash /app/start.sh"
