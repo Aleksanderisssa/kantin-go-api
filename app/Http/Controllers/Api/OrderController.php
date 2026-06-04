@@ -13,89 +13,91 @@ use Midtrans\Snap;
 class OrderController extends Controller
 {
     public function checkout(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'items' => 'required|array',
-            'items.*.food_id' => 'required|exists:foods,id',
-            'items.*.quantity' => 'required|integer|min:1',
+{
+    $validator = Validator::make($request->all(), [
+        'items' => 'required|array',
+        'items.*.food_id' => 'required|exists:foods,id',
+        'items.*.quantity' => 'required|integer|min:1',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
+
+    // Rollback transaksi yang mungkin masih aktif
+    try { DB::rollBack(); } catch (\Exception $e) {}
+
+    DB::beginTransaction();
+
+    try {
+        $totalPrice = 0;
+        $orderItems = [];
+
+        foreach ($request->items as $item) {
+            $food = DB::table('foods')->where('id', $item['food_id'])->first();
+            $subTotal = $food->price * $item['quantity'];
+            $totalPrice += $subTotal;
+            $orderItems[] = [
+                'food_id' => $food->id,
+                'quantity' => $item['quantity'],
+                'subtotal' => $subTotal
+            ];
+        }
+
+        $userId = $request->user()->id;
+
+        $order = Order::create([
+            'user_id' => $userId,
+            'total_price' => $totalPrice,
+            'status' => 'dipesan',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $totalPrice = 0;
-            $orderItems = [];
-
-            foreach ($request->items as $item) {
-                $food = DB::table('foods')->where('id', $item['food_id'])->first();
-                $subTotal = $food->price * $item['quantity'];
-                $totalPrice += $subTotal;
-                $orderItems[] = [
-                    'food_id' => $food->id,
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $subTotal
-                ];
-            }
-
-            $userId = $request->user()->id;
-
-            $order = Order::create([
-                'user_id' => $userId,
-                'total_price' => $totalPrice,
-                'status' => 'dipesan',
-            ]);
-
-            foreach ($orderItems as $orderItem) {
-                DB::table('order_details')->insert([
-                    'order_id' => $order->id,
-                    'food_id' => $orderItem['food_id'],
-                    'quantity' => $orderItem['quantity'],
-                    'price' => $orderItem['subtotal'],
-                    'created_at' => now()->toDateTimeString(),
-                    'updated_at' => now()->toDateTimeString()
-                ]);
-            }
-
-            // Midtrans config — di dalam fungsi
-            Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-            Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
-            Config::$isSanitized = true;
-            Config::$is3ds = true;
-
-            $params = [
-                'transaction_details' => [
-                    'order_id' => $order->id,
-                    'gross_amount' => $order->total_price,
-                ],
-                'customer_details' => [
-                    'first_name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ],
-            ];
-
-            $snapToken = Snap::getSnapToken($params);
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Pesanan berhasil dibuat!',
+        foreach ($orderItems as $orderItem) {
+            DB::table('order_details')->insert([
                 'order_id' => $order->id,
-                'total_bayar' => $totalPrice,
-                'snap_token' => $snapToken,
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Transaksi gagal.',
-                'error' => $e->getMessage()
-            ], 500);
+                'food_id' => $orderItem['food_id'],
+                'quantity' => $orderItem['quantity'],
+                'price' => $orderItem['subtotal'],
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString()
+            ]);
         }
+
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $order->id,
+                'gross_amount' => $order->total_price,
+            ],
+            'customer_details' => [
+                'first_name' => $request->user()->name,
+                'email' => $request->user()->email,
+            ],
+        ];
+
+        $snapToken = Snap::getSnapToken($params);
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Pesanan berhasil dibuat!',
+            'order_id' => $order->id,
+            'total_bayar' => $totalPrice,
+            'snap_token' => $snapToken,
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Transaksi gagal.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function updateStatus(Request $request, $id)
     {
