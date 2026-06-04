@@ -1,0 +1,23 @@
+# Caddyfile untuk FrankenPHP + Laravel di Railway
+# Auto-detected oleh Railpack jika builder tetap Railpack
+
+{
+    frankenphp
+    auto_https off
+    order php_server before file_server
+}
+
+:{$PORT} {
+    # Document root Laravel adalah /app/public
+    root * /app/public
+
+    # Compress responses
+    encode zstd br gzip
+
+    # Header untuk Railway HTTPS termination
+    header X-Forwarded-Proto https
+    header X-Forwarded-For {remote_host}
+
+    # FrankenPHP jalankan PHP (bukan proxy ke artisan serve)
+    php_server
+}
