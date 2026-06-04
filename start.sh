@@ -17,9 +17,10 @@ echo "[2/2] Starting server..."
 
 # Deteksi environment: FrankenPHP atau plain PHP
 if command -v frankenphp &>/dev/null; then
-    echo "→ FrankenPHP detected, using frankenphp run"
-    exec frankenphp run --config /app/Caddyfile
+    CADDYFILE="$(pwd)/Caddyfile"
+    echo "→ FrankenPHP detected, using frankenphp run --config $CADDYFILE"
+    exec frankenphp run --config "$CADDYFILE"
 else
-    echo "→ Plain PHP detected, using php -S server.php"
+    echo "→ Plain PHP detected, using php -S 0.0.0.0:${PORT:-8000} server.php"
     exec php -S 0.0.0.0:${PORT:-8000} server.php
 fi
