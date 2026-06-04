@@ -23,4 +23,4 @@ nixPkgs = [
 cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [start]
-cmd = "bash /app/start.sh"
+cmd = "php artisan migrate --force && php -S 0.0.0.0:$PORT server.php"
