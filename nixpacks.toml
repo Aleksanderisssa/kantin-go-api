@@ -3,6 +3,7 @@
 
 [phases.setup]
 nixPkgs = [
+    "nodejs",
     "php83",
     "php83Extensions.pdo",
     "php83Extensions.pdo_mysql",
@@ -20,4 +21,8 @@ nixPkgs = [
 ]
 
 [phases.install]
-cmds = ["composer install --no-dev --optimize-autoloader"]
+cmds = [
+    "npm install",
+    "npm run build",
+    "composer install --no-dev --optimize-autoloader"
+]
