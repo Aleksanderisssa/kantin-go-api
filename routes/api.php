@@ -44,12 +44,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
    // Autentikasi & Profil Siswa
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user-profile', function (Request $request) {
-        return $request->user();
-    });
-    
-    // INI ROUTE BARU UNTUK UPDATE PROFIL
-    Route::put('/user-profile', [AuthController::class, 'updateProfile']);
+    Route::get('/user-profile', [AuthController::class, 'getProfile']);
+
+    // Android memanggil /update-profile, bukan /user-profile
+    Route::put('/update-profile', [AuthController::class, 'updateProfile']);
+
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // Manajemen Kantin & Makanan (Sisi Penjual/Admin)
     Route::post('/canteens', [CanteenController::class, 'store']);

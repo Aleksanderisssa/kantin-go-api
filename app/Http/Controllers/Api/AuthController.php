@@ -84,29 +84,54 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * FUNGSI: Update Profil User
-     */
+    // 4. Get Profile (wrapped response untuk Android)
+    public function getProfile(Request $request)
+    {
+        return response()->json([
+            'message' => 'Berhasil mengambil profil.',
+            'data' => $request->user(),
+        ], 200);
+    }
+
+    // 5. Update Profil
     public function updateProfile(Request $request)
     {
-        // 1. Ambil data user yang sedang login saat ini
         $user = $request->user();
 
-        // 2. Validasi input (misal cuma mau ganti nama & email)
-        // Kata 'sometimes' berarti: kalau datanya dikirim ya divalidasi, kalau nggak dikirim ya biarin aja
         $request->validate([
-            'name' => 'sometimes|required|string|max:255',
+            'name'  => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
-            // Catatan: Kalau di database kamu nambahin kolom nomor HP (misal 'phone'), 
-            // kamu bisa tambahkan di sini juga: 'phone' => 'sometimes|string',
         ]);
 
-        // 3. Update datanya ke database
-        $user->update($request->only(['name', 'email'])); // Tambahkan 'phone' di dalam array jika ada
+        $user->update($request->only(['name', 'email']));
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui!',
-            'data' => $user
+            'data'    => $user,
+        ], 200);
+    }
+
+    // 6. Ganti Password
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password'          => 'required',
+            'new_password'              => 'required|string|min:6|confirmed',
+            'new_password_confirmation' => 'required',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Password lama tidak sesuai.',
+            ], 422);
+        }
+
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        return response()->json([
+            'message' => 'Password berhasil diubah!',
         ], 200);
     }
 }
