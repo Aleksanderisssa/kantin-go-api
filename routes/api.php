@@ -50,7 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout', [OrderController::class, 'checkout']);
     Route::get('/orders/history', [OrderController::class, 'history']);
     
-    // ROUTE BARU: Kirim Rating Makanan
-    Route::post('/rating', [RatingController::class, 'store']); // <-- TAMBAHAN 2: Daftarkan rute Rating
+    // Rating Makanan — dua path agar kompatibel dengan Android (/ratings) dan typo lama (/rating)
+    Route::post('/ratings', [RatingController::class, 'store']);
+    Route::post('/rating',  [RatingController::class, 'store']); // backward compat
     
 });

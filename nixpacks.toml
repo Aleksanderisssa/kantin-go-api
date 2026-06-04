@@ -1,0 +1,24 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Railway Nixpacks Configuration — Laravel 10 + PHP 8.3
+# Docs: https://nixpacks.com/docs/providers/php
+# ──────────────────────────────────────────────────────────────────────────────
+
+providers = ["php"]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader"
+]
+
+# Build phase: JANGAN cache config di sini karena env vars belum tersedia.
+# Caching dilakukan di start.sh saat runtime.
+[phases.build]
+cmds = [
+    "php artisan config:clear",
+    "php artisan route:clear",
+    "php artisan view:clear"
+]
+
+[start]
+# start.sh menjalankan migrate → cache → serve
+cmd = "bash start.sh"

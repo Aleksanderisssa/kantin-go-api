@@ -8,16 +8,14 @@ use Illuminate\Http\Request;
 class TrustProxies extends Middleware
 {
     /**
-     * The trusted proxies for this application.
-     *
-     * @var array<int, string>|string|null
+     * '*' = percayai SEMUA proxy.
+     * Railway menggunakan reverse proxy/load balancer,
+     * sehingga tanpa ini HTTPS detection dan IP forwarding tidak benar.
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
-     * The headers that should be used to detect proxies.
-     *
-     * @var int
+     * Header yang digunakan untuk mendeteksi proxy.
      */
     protected $headers =
         Request::HEADER_X_FORWARDED_FOR |
