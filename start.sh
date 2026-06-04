@@ -1,20 +1,24 @@
 #!/bin/bash
-# KantinGO API — Minimal Railway startup script
-echo "=== KantinGO API Starting ==="
-echo "PORT=${PORT:-8000}"
-echo "PHP=$(php -r 'echo PHP_VERSION;')"
+echo "======================================"
+echo " KantinGO API Starting on Railway"
+echo " PORT=${PORT:-8000}"
+echo " PHP=$(php -r 'echo PHP_VERSION;')"
+echo "======================================"
+echo "APP_ENV=${APP_ENV}"
+echo "DB_HOST=${DB_HOST}"
+echo "APP_KEY set: $([ -n "$APP_KEY" ] && echo YES || echo NO)"
 
-# JANGAN config:cache di sini — bisa buat cache rusak jika env vars belum ada.
-# Railway menyuntikkan env vars langsung, Laravel baca otomatis tanpa cache.
+# 1. Clear cache lama
+echo "[1/3] Clearing caches..."
+php artisan config:clear 2>&1 || true
+php artisan route:clear  2>&1 || true
+php artisan view:clear   2>&1 || true
 
-# Hanya clear cache lama
-php artisan config:clear  2>&1 || true
-php artisan route:clear   2>&1 || true
-php artisan view:clear    2>&1 || true
+# 2. Migrate database
+echo "[2/3] Running migrations..."
+php artisan migrate --force 2>&1 || echo "WARNING: Migration failed, continuing..."
 
-# Database migration (non-fatal — server tetap start meski migration gagal)
-echo "Running migrations..."
-php artisan migrate --force 2>&1 || echo "WARNING: Migration failed - check DB variables in Railway"
-
-echo "=== Starting server on 0.0.0.0:${PORT:-8000} ==="
-exec php artisan serve --host=0.0.0.0 --port="${PORT:-8000}"
+# 3. Start server pakai php -S server.php
+#    Lebih ringan dan reliable dari 'php artisan serve'
+echo "[3/3] Starting PHP server on 0.0.0.0:${PORT:-8000}..."
+exec php -S 0.0.0.0:${PORT:-8000} server.php

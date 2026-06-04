@@ -15,6 +15,18 @@ use App\Http\Controllers\Api\RatingController; // <-- TAMBAHAN 1: Import RatingC
 */
 
 // =========================================================================
+// HEALTH CHECK — untuk verifikasi Railway deployment
+// =========================================================================
+Route::get('/health', function () {
+    return response()->json([
+        'status'  => 'ok',
+        'app'     => config('app.name'),
+        'env'     => config('app.env'),
+        'php'     => PHP_VERSION,
+    ]);
+});
+
+// =========================================================================
 // PUBLIC ROUTES (Bisa diakses langsung tanpa login/token)
 // =========================================================================
 Route::post('/register', [AuthController::class, 'register']);
