@@ -23,4 +23,4 @@ nixPkgs = [
 cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [start]
-cmd = "php artisan migrate --force && php -S 0.0.0.0:$PORT server.php"
+cmd = "php artisan migrate --force && php -S 0.0.0.0:$PORT -t public"
