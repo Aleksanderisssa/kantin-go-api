@@ -60,7 +60,13 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Email atau password salah.'
+                'message'     => 'Email atau password salah.',
+                // DEBUG TEMPORARY — hapus setelah fix dikonfirmasi
+                '_debug' => [
+                    'user_found'       => $user ? true : false,
+                    'hash_check'       => $user ? Hash::check($request->password, $user->password) : null,
+                    'stored_prefix'    => $user ? substr($user->getRawOriginal('password'), 0, 10) : null,
+                ],
             ], 401);
         }
 
