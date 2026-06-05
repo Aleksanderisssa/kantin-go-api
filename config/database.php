@@ -65,7 +65,13 @@ return [
             // SSL_VERIFY_SERVER_CERT = false → koneksi SSL tetap aktif
             // tapi tidak memvalidasi CA certificate (aman untuk dev/staging).
             'options' => extension_loaded('pdo_mysql') ? array_merge(
-                [PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false],
+                [
+                    PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                    // Aiven MySQL default autocommit=0 → setiap INSERT tidak
+                    // ter-commit otomatis. Paksa autocommit=1 agar setiap
+                    // statement langsung di-commit tanpa perlu DB::commit().
+                    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET autocommit=1, NAMES utf8mb4 COLLATE utf8mb4_unicode_ci',
+                ],
                 env('MYSQL_ATTR_SSL_CA') ? [PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')] : []
             ) : [],
         ],
