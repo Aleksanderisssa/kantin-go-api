@@ -43,6 +43,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        // JANGAN pakai 'password' => 'hashed' jika AuthController sudah
+        // memanggil Hash::make() secara manual. Kombinasi keduanya menyebabkan
+        // double-hashing: bcrypt(bcrypt(password)) → Hash::check() selalu gagal.
     ];
 }
