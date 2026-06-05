@@ -67,15 +67,22 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            // Raw SQL langsung ke MySQL, bypass Eloquent & query builder cache
+            $allUsers  = \Illuminate\Support\Facades\DB::select('SELECT id, email FROM users ORDER BY id');
+            $directHit = \Illuminate\Support\Facades\DB::select(
+                'SELECT id, email FROM users WHERE email = ?', [$request->email]
+            );
+
             return response()->json([
                 'message' => 'Email atau password salah.',
                 '_debug'  => [
                     'user_found'    => $user ? true : false,
-                    'hash_check'    => $user ? Hash::check($request->password, $user->password) : null,
                     'db_host'       => config('database.connections.mysql.host'),
                     'db_name'       => config('database.connections.mysql.database'),
-                    'db_url_set'    => !empty(env('DATABASE_URL')),
-                    'user_count'    => \App\Models\User::count(),
+                    'user_count_eloquent' => \App\Models\User::count(),
+                    'user_count_raw'      => \Illuminate\Support\Facades\DB::select('SELECT COUNT(*) as c FROM users')[0]->c,
+                    'all_users_raw' => $allUsers,
+                    'direct_hit'    => $directHit,
                     'server'        => gethostname(),
                     'pid'           => getmypid(),
                 ],
