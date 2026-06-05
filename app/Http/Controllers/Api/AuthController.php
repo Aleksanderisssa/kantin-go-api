@@ -37,10 +37,16 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Register sukses!',
-            'data' => $user,
+            'message'      => 'Register sukses!',
+            'data'         => $user,
             'access_token' => $token,
-            'token_type' => 'Bearer',
+            'token_type'   => 'Bearer',
+            // DEBUG TEMPORARY
+            '_debug' => [
+                'db_host'    => config('database.connections.mysql.host'),
+                'db_name'    => config('database.connections.mysql.database'),
+                'user_count' => \App\Models\User::count(),
+            ],
         ], 201);
     }
 
