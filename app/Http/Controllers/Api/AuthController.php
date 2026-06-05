@@ -46,6 +46,8 @@ class AuthController extends Controller
                 'db_host'    => config('database.connections.mysql.host'),
                 'db_name'    => config('database.connections.mysql.database'),
                 'user_count' => \App\Models\User::count(),
+                'server'     => gethostname(),
+                'pid'        => getmypid(),
             ],
         ], 201);
     }
@@ -74,6 +76,8 @@ class AuthController extends Controller
                     'db_name'       => config('database.connections.mysql.database'),
                     'db_url_set'    => !empty(env('DATABASE_URL')),
                     'user_count'    => \App\Models\User::count(),
+                    'server'        => gethostname(),
+                    'pid'           => getmypid(),
                 ],
             ], 401);
         }
