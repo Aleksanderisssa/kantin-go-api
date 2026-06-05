@@ -6,6 +6,9 @@
 
 echo "=== KantinGO API startup ==="
 
+# Force hapus cache file secara langsung dulu (artisan clear kadang gagal di Docker)
+rm -f bootstrap/cache/config.php bootstrap/cache/routes.php bootstrap/cache/events.php
+
 php artisan config:clear  || true
 php artisan route:clear   || true
 php artisan cache:clear   || true

@@ -70,7 +70,9 @@ return [
                     // Aiven MySQL default autocommit=0 → setiap INSERT tidak
                     // ter-commit otomatis. Paksa autocommit=1 agar setiap
                     // statement langsung di-commit tanpa perlu DB::commit().
-                    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET autocommit=1, NAMES utf8mb4 COLLATE utf8mb4_unicode_ci',
+                    // SET NAMES tidak bisa digabung dengan SET biasa di semua versi MySQL.
+                    // Charset/collation sudah dihandle Laravel via config 'charset'/'collation'.
+                    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET autocommit = 1',
                 ],
                 env('MYSQL_ATTR_SSL_CA') ? [PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')] : []
             ) : [],

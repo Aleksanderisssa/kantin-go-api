@@ -46,6 +46,7 @@ class AuthController extends Controller
                 'db_host'    => config('database.connections.mysql.host'),
                 'db_name'    => config('database.connections.mysql.database'),
                 'user_count' => \App\Models\User::count(),
+                'autocommit' => \Illuminate\Support\Facades\DB::select('SELECT @@autocommit as ac')[0]->ac ?? 'unknown',
                 'server'     => gethostname(),
                 'pid'        => getmypid(),
             ],
