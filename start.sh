@@ -15,10 +15,13 @@ php artisan cache:clear
 echo "[2/4] Running migrations..."
 php artisan migrate --force
 
-# 3. Cache config & routes agar performa lebih baik di production
-echo "[3/4] Caching config & routes..."
+# 3. Cache config agar performa lebih baik di production
+#    CATATAN: route:cache TIDAK dijalankan karena routes/api.php
+#    menggunakan closure (Route::get('/health', function(){...}))
+#    yang tidak bisa di-serialize. Jalankan route:cache hanya
+#    setelah semua closure diganti ke Controller method.
+echo "[3/4] Caching config..."
 php artisan config:cache
-php artisan route:cache
 
 # 4. Jalankan PHP built-in server
 echo "[4/4] Starting server on port ${PORT:-8000}..."
