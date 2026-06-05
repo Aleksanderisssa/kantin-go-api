@@ -45,7 +45,10 @@ return [
 
         'mysql' => [
             'driver'         => 'mysql',
-            'url'            => env('DATABASE_URL'),
+            // JANGAN gunakan 'url' => env('DATABASE_URL') — Railway auto-inject DATABASE_URL
+            // yang menunjuk ke MySQL internal Railway, bukan Aiven. Ini akan override
+            // semua DB_HOST/DB_PORT/DB_DATABASE di bawah dan menyebabkan data masuk
+            // ke database yang salah, sehingga Sanctum token tidak ketemu (401).
             'host'           => env('DB_HOST', '127.0.0.1'),
             'port'           => env('DB_PORT', '3306'),
             'database'       => env('DB_DATABASE', 'forge'),

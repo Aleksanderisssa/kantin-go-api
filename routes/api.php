@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CanteenController;
 use App\Http\Controllers\Api\FoodController;
@@ -24,6 +25,40 @@ Route::get('/health', function () {
         'env'     => config('app.env'),
         'php'     => PHP_VERSION,
     ]);
+});
+
+// =========================================================================
+// DEBUG CONNECTION — Hanya untuk troubleshooting. Hapus setelah production.
+// Akses: GET /api/debug-connection
+// =========================================================================
+Route::get('/debug-connection', function () {
+    $result = [
+        'php_version'    => PHP_VERSION,
+        'laravel_version' => app()->version(),
+        'db_driver'      => config('database.default'),
+        'db_host'        => config('database.connections.mysql.host'),
+        'db_port'        => config('database.connections.mysql.port'),
+        'db_name'        => config('database.connections.mysql.database'),
+        'database_url_set' => !empty(env('DATABASE_URL')),
+    ];
+
+    try {
+        DB::connection()->getPdo();
+        $result['db_connected']  = true;
+        $result['user_count']    = \App\Models\User::count();
+        $result['token_count']   = DB::table('personal_access_tokens')->count();
+        $result['order_count']   = DB::table('orders')->count();
+
+        // Cek apakah kolom status orders sudah VARCHAR (bukan ENUM lama)
+        $col = DB::select("SHOW COLUMNS FROM orders LIKE 'status'");
+        $result['orders_status_type'] = $col[0]->Type ?? 'unknown';
+
+    } catch (\Exception $e) {
+        $result['db_connected'] = false;
+        $result['db_error']     = $e->getMessage();
+    }
+
+    return response()->json($result);
 });
 
 // =========================================================================
